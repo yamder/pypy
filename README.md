@@ -35,7 +35,7 @@ VITE_SUPABASE_URL=https://your-project-ref.supabase.co
 VITE_SUPABASE_ANON_KEY=your_publishable_anon_key
 ```
 
-Copy `.env.example` to `.env.local` and fill in the placeholders. The publishable (anon) key is safe to use in the browser when Row Level Security (RLS) is enabled on your tables; enable RLS for any tables this app will access.
+Copy `.env.example` to `.env.local` and fill in the placeholders. The publishable (anon) key is safe to use in the browser when Row Level Security (RLS) is enabled on your tables; enable RLS for any tables this app will access. **On Vercel:** after adding these env vars, trigger a **Redeploy** (Deployments → latest → ⋯ → Redeploy) so the new build includes them.
 
 This setup only connects the app to Supabase; campaigns, notifications, and auth still use Base44 until those features are migrated.
 
@@ -44,7 +44,10 @@ Run the app: `npm run dev`
 **Deploy to GitHub Pages**
 
 1. In the repo on GitHub: **Settings → Pages → Build and deployment**: Source = **GitHub Actions**.
-2. Push to `main`; the workflow builds and deploys. The site will be at `https://<username>.github.io/pypy/` (if the repo is `pypy`). For a different repo name, edit `VITE_BASE_PATH` in [.github/workflows/deploy.yml](.github/workflows/deploy.yml).
+2. **Add Supabase secrets** (required for login/signup in production): **Settings → Secrets and variables → Actions → New repository secret**. Add:
+   - `VITE_SUPABASE_URL` = your Supabase project URL (e.g. `https://xxxx.supabase.co`)
+   - `VITE_SUPABASE_ANON_KEY` = your Supabase anon/publishable key
+3. Push to `main`; the workflow builds and deploys with these env vars. The site will be at `https://<username>.github.io/pypy/` (or your custom domain). For a different repo name, edit `VITE_BASE_PATH` in [.github/workflows/deploy.yml](.github/workflows/deploy.yml).
 
 **Publish your changes**
 

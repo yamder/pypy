@@ -33,8 +33,10 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Replace with your repo name if different (e.g. creator-campaign-pro -> /creator-campaign-pro/)
           VITE_BASE_PATH: /pypy/
+          # Add these as repo secrets (Settings → Secrets and variables → Actions): VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: SPA fallback for GitHub Pages
         run: cp dist/index.html dist/404.html

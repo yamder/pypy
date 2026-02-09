@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import StatsCard from '../components/dashboard/StatsCard';
@@ -20,7 +21,19 @@ import { Button } from '@/components/ui/button';
 import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { motion } from 'framer-motion';
 
+function getDisplayName(user) {
+  if (!user) return '';
+  const fullName = user.user_metadata?.full_name || user.user_metadata?.name;
+  if (fullName && fullName.trim()) return fullName.trim();
+  if (user.email) return user.email.split('@')[0];
+  return '';
+}
+
 export default function Dashboard() {
+  const { user } = useAuth();
+  const displayName = getDisplayName(user);
+  const greeting = displayName ? `היי ${displayName} 😊` : 'היי 😊';
+
   const { data: campaigns = [], isLoading } = useQuery({
     queryKey: ['campaigns'],
     queryFn: () => base44.entities.Campaign.list('-created_date')
@@ -106,7 +119,7 @@ export default function Dashboard() {
 
         <div>
           <p className="text-sm text-slate-500 mb-1">{format(now, 'MMMM yyyy')}</p>
-          <h1 className="text-4xl font-bold text-slate-900">היי ניצן 😊</h1>
+          <h1 className="text-4xl font-bold text-slate-900">{greeting}</h1>
         </div>
         <Link to={createPageUrl('Campaigns')}>
           <Button className="bg-slate-900 hover:bg-slate-800 text-white shadow-sm">
