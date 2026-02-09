@@ -1,7 +1,7 @@
 {
-  "name": "CreatorHub",
-  "short_name": "CreatorHub",
-  "description": "Creator campaign management",
+  "name": "Organized influencers",
+  "short_name": "Organized influencers",
+  "description": "Organized influencers campaign management",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
