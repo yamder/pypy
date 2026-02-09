@@ -3,7 +3,11 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
+// For GitHub Pages: set VITE_BASE_PATH to repo name, e.g. /pypy/
+const base = process.env.VITE_BASE_PATH || '/';
+
 export default defineConfig({
+  base,
   logLevel: 'error', // Suppress warnings, only show errors
   plugins: [
     base44({

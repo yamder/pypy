@@ -41,6 +41,11 @@ This setup only connects the app to Supabase; campaigns, notifications, and auth
 
 Run the app: `npm run dev`
 
+**Deploy to GitHub Pages**
+
+1. In the repo on GitHub: **Settings → Pages → Build and deployment**: Source = **GitHub Actions**.
+2. Push to `main`; the workflow builds and deploys. The site will be at `https://<username>.github.io/pypy/` (if the repo is `pypy`). For a different repo name, edit `VITE_BASE_PATH` in [.github/workflows/deploy.yml](.github/workflows/deploy.yml).
+
 **Publish your changes**
 
 Open [Base44.com](http://Base44.com) and click on Publish.

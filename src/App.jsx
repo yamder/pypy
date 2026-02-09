@@ -9,6 +9,9 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 
+// For GitHub Pages (e.g. /pypy/) – basename must match Vite base path without trailing slash
+const basename = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || undefined;
+
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
@@ -68,7 +71,7 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
-        <Router>
+        <Router basename={basename}>
           <NavigationTracker />
           <AppRoutes />
         </Router>
