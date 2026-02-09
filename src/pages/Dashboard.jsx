@@ -79,7 +79,7 @@ export default function Dashboard() {
   const waitingPayment = campaigns.filter((c) => !c.is_paid && c.payment_amount > 0);
   const upcomingPublish = campaigns
     .filter((c) => (c.status === 'in_progress' || c.status === 'signed') && c.planned_publish_date)
-    .sort((a, b) => new Date(a.planned_publish_date) - new Date(b.planned_publish_date))
+    .sort((a, b) => new Date(a.planned_publish_date).getTime() - new Date(b.planned_publish_date).getTime())
     .slice(0, 5);
 
   if (isLoading) {

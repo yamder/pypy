@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-export default function StatsCard({ title, value, subtitle, icon: Icon, color = "indigo", trend }) {
+export default function StatsCard({ title, value, subtitle = null, icon: Icon, color = "indigo", trend = null }) {
   const iconColors = {
     indigo: "bg-indigo-50 text-indigo-600",
     green: "bg-emerald-50 text-emerald-600",
