@@ -34,11 +34,12 @@ export default function Dashboard() {
   const displayName = getDisplayName(user);
   const greeting = displayName ? `היי ${displayName} 😊` : 'היי 😊';
 
-  const { data: campaigns = [], isLoading } = useQuery({
+  const { data: campaignsRaw, isLoading } = useQuery({
     queryKey: ['campaigns'],
     queryFn: () => base44.entities.Campaign.list('-created_date')
   });
 
+  const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
   const now = new Date();
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);

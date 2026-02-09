@@ -22,12 +22,12 @@ export default function NotificationEngine() {
     enabled: !!user?.email
   });
 
-  const { data: campaigns = [] } = useQuery({
+  const { data: campaignsRaw = [] } = useQuery({
     queryKey: ['campaigns'],
     queryFn: () => base44.entities.Campaign.list()
   });
 
-  const { data: existingNotifications = [] } = useQuery({
+  const { data: existingNotificationsRaw = [] } = useQuery({
     queryKey: ['notifications', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
@@ -42,6 +42,9 @@ export default function NotificationEngine() {
     },
     enabled: !!user?.email
   });
+
+  const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
+  const existingNotifications = Array.isArray(existingNotificationsRaw) ? existingNotificationsRaw : [];
 
   useEffect(() => {
     if (!user?.email || !settings || campaigns.length === 0) return;

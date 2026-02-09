@@ -20,10 +20,11 @@ export default function Campaigns() {
 
   const queryClient = useQueryClient();
   
-  const { data: campaigns = [], isLoading } = useQuery({
+  const { data: campaignsRaw, isLoading } = useQuery({
     queryKey: ['campaigns'],
     queryFn: () => base44.entities.Campaign.list('-created_date')
   });
+  const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));

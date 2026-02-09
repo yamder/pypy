@@ -35,7 +35,7 @@ export default function NotificationBell() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data: notifications = [] } = useQuery({
+  const { data: notificationsRaw } = useQuery({
     queryKey: ['notifications', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
@@ -51,6 +51,7 @@ export default function NotificationBell() {
     enabled: !!user?.email
   });
 
+  const notifications = Array.isArray(notificationsRaw) ? notificationsRaw : [];
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   const markAsReadMutation = useMutation({

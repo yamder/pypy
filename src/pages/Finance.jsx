@@ -40,10 +40,11 @@ export default function Finance() {
   const [selectedMonth, setSelectedMonth] = useState("all");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
 
-  const { data: campaigns = [], isLoading } = useQuery({
+  const { data: campaignsRaw, isLoading } = useQuery({
     queryKey: ['campaigns'],
     queryFn: () => base44.entities.Campaign.list('-created_date')
   });
+  const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
 
   const now = new Date();
   const currentYear = parseInt(selectedYear);

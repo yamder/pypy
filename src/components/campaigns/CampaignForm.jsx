@@ -83,14 +83,14 @@ export default function CampaignForm({ open, onOpenChange, campaign, onSave }) {
   const removePlatformContentItem = (index) => {
     setFormData(prev => ({
       ...prev,
-      platform_content_items: prev.platform_content_items.filter((_, i) => i !== index)
+      platform_content_items: (Array.isArray(prev.platform_content_items) ? prev.platform_content_items : []).filter((_, i) => i !== index)
     }));
   };
 
   const updatePlatformContentItem = (index, field, value) => {
     setFormData(prev => ({
       ...prev,
-      platform_content_items: prev.platform_content_items.map((item, i) => 
+      platform_content_items: (Array.isArray(prev.platform_content_items) ? prev.platform_content_items : []).map((item, i) => 
         i === index ? { ...item, [field]: value } : item
       )
     }));
