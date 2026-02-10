@@ -6,13 +6,11 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import StatsCard from '../components/dashboard/StatsCard';
 import { 
-  Wallet, 
   TrendingUp, 
   Clock, 
   CheckCircle2,
   Loader2,
-  Calendar,
-  ArrowLeft
+  Calendar
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +34,14 @@ const months = [
   { value: "11", label: "נובמבר" },
   { value: "12", label: "דצמבר" }
 ];
+
+function getPrimaryPlatform(campaign) {
+  if (Array.isArray(campaign.platform_content_items) && campaign.platform_content_items.length > 0) {
+    return campaign.platform_content_items[0]?.platform || 'Other';
+  }
+  if (campaign.platform) return campaign.platform;
+  return 'Other';
+}
 
 export default function Finance() {
   const { user } = useAuth();
@@ -363,7 +369,9 @@ export default function Finance() {
         
         {pendingCampaigns.length > 0 ? (
           <div className="space-y-2">
-            {pendingCampaigns.map(campaign => (
+            {pendingCampaigns.map(campaign => {
+              const primaryPlatform = getPrimaryPlatform(campaign);
+              return (
               <Link
                 key={campaign.id}
                 to={createPageUrl(`CampaignDetails?id=${campaign.id}`)}
@@ -372,12 +380,14 @@ export default function Finance() {
                 <div className="flex items-center gap-4">
                   <div className={cn(
                     "w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold shadow-md border-2 border-white ring-2 ring-slate-100 group-hover:scale-110 transition-transform",
-                    campaign.platform === 'Instagram' ? "bg-gradient-to-br from-purple-500 to-pink-500" :
-                    campaign.platform === 'TikTok' ? "bg-black" :
-                    campaign.platform === 'YouTube' ? "bg-red-600" :
+                    primaryPlatform === 'Instagram' ? "bg-gradient-to-br from-purple-500 to-pink-500" :
+                    primaryPlatform === 'TikTok' ? "bg-black" :
+                    primaryPlatform === 'YouTube' ? "bg-red-600" :
+                    primaryPlatform === 'Facebook' ? "bg-blue-600" :
+                    primaryPlatform === 'Twitter' ? "bg-sky-500" :
                     "bg-slate-500"
                   )}>
-                    {campaign.platform?.charAt(0)}
+                    {primaryPlatform.charAt(0)}
                   </div>
                   <div>
                     <h4 className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{campaign.brand_name}</h4>
@@ -400,7 +410,7 @@ export default function Finance() {
                   )}
                 </div>
               </Link>
-            ))}
+            )})}
           </div>
         ) : (
           <div className="text-center py-12 text-slate-400">

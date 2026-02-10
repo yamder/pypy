@@ -31,6 +31,9 @@ const months = [
 
 export default function CampaignFilters({ filters, onFilterChange, onClearFilters }) {
   const hasFilters = filters.search || filters.platform || filters.status || filters.month;
+  const platformValue = filters.platform || 'all';
+  const statusValue = filters.status || 'all';
+  const monthValue = filters.month || 'all';
 
   return (
     <div className="bg-white rounded-2xl border-2 border-slate-200/80 p-4 shadow-md">
@@ -45,36 +48,36 @@ export default function CampaignFilters({ filters, onFilterChange, onClearFilter
           />
         </div>
 
-        <Select value={filters.platform} onValueChange={(value) => onFilterChange('platform', value)}>
+        <Select value={platformValue} onValueChange={(value) => onFilterChange('platform', value === 'all' ? '' : value)}>
           <SelectTrigger className="w-[140px] border-slate-200">
             <SelectValue placeholder="פלטפורמה" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={null}>הכל</SelectItem>
+            <SelectItem value="all">הכל</SelectItem>
             {platforms.map(p => (
               <SelectItem key={p} value={p}>{p}</SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Select value={filters.status} onValueChange={(value) => onFilterChange('status', value)}>
+        <Select value={statusValue} onValueChange={(value) => onFilterChange('status', value === 'all' ? '' : value)}>
           <SelectTrigger className="w-[160px] border-slate-200">
             <SelectValue placeholder="סטטוס" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={null}>הכל</SelectItem>
+            <SelectItem value="all">הכל</SelectItem>
             {statuses.map(s => (
               <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Select value={filters.month} onValueChange={(value) => onFilterChange('month', value)}>
+        <Select value={monthValue} onValueChange={(value) => onFilterChange('month', value === 'all' ? '' : value)}>
           <SelectTrigger className="w-[130px] border-slate-200">
             <SelectValue placeholder="חודש" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={null}>הכל</SelectItem>
+            <SelectItem value="all">הכל</SelectItem>
             {months.map(m => (
               <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
             ))}

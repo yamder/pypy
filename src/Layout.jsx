@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from './utils';
+import { useAuth } from '@/lib/AuthContext';
 import { 
   LayoutDashboard, 
   Megaphone, 
   Wallet, 
   Menu, 
   X,
-  Sparkles
+  Sparkles,
+  LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import NotificationBell from './components/notifications/NotificationBell';
@@ -21,6 +23,16 @@ const navItems = [
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const displayName =
+    user?.user_metadata?.full_name?.trim() ||
+    user?.user_metadata?.name?.trim() ||
+    user?.email ||
+    'משתמש';
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
     <div dir="rtl" className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
@@ -48,6 +60,14 @@ export default function Layout({ children, currentPageName }) {
         </div>
         <div className="flex items-center gap-2">
           <NotificationBell />
+          <button
+            onClick={handleLogout}
+            className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-600"
+            title="התנתק"
+            aria-label="התנתק"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
@@ -78,6 +98,18 @@ export default function Layout({ children, currentPageName }) {
             <div className="hidden lg:block">
               <NotificationBell />
             </div>
+          </div>
+
+          <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
+            <p className="text-xs text-slate-500 mb-1">מחובר כעת</p>
+            <p className="text-sm font-semibold text-slate-800 truncate">{displayName}</p>
+            <button
+              onClick={handleLogout}
+              className="mt-3 inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              התנתק
+            </button>
           </div>
 
           <nav className="space-y-1">

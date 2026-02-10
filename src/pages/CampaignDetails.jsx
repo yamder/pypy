@@ -13,7 +13,6 @@ import { Label } from '@/components/ui/label';
 import { 
   ArrowRight, 
   Calendar, 
-  Wallet, 
   FileText, 
   ExternalLink,
   Pencil,
@@ -571,8 +570,8 @@ export default function CampaignDetails() {
         onOpenChange={setShowEditForm}
         campaign={campaign}
         onSave={() => {
-          queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
-          queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+          queryClient.invalidateQueries({ queryKey: ['campaign', campaignId, user?.id] });
+          queryClient.invalidateQueries({ queryKey: ['campaigns', user?.id] });
         }}
       />
 

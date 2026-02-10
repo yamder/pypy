@@ -14,7 +14,6 @@ import {
   Plus,
   ArrowLeft,
   Loader2,
-  TrendingUp,
   Calendar } from
 'lucide-react';
 import { Button } from '@/components/ui/button';

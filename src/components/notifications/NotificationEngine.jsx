@@ -4,6 +4,15 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { differenceInDays, isPast, parseISO } from 'date-fns';
 
+const statusLabels = {
+  waiting_signature: 'ממתין לחתימה',
+  signed: 'חתום',
+  in_progress: 'בתהליך יצירה',
+  published: 'פורסם',
+  waiting_payment: 'ממתין לתשלום',
+  paid: 'שולם'
+};
+
 export default function NotificationEngine() {
   const { user } = useAuth();
 
@@ -134,6 +143,28 @@ export default function NotificationEngine() {
                 priority: 'high'
               });
             }
+          }
+        }
+
+        if (settings.notify_status_changes) {
+          const statusLabel = statusLabels[campaign.status] || campaign.status;
+          const alreadyStatusNotified = existingNotifications.some(n =>
+            n.type === 'status_change' &&
+            n.campaign_id === campaign.id &&
+            n.message.includes(`"${statusLabel}"`) &&
+            differenceInDays(today, new Date(n.created_date)) < 7
+          );
+
+          if (!alreadyStatusNotified) {
+            notificationsToCreate.push({
+              user_email: user.email,
+              type: 'status_change',
+              title: 'עדכון סטטוס קמפיין',
+              message: `הסטטוס של ${campaign.brand_name} עודכן ל-"${statusLabel}"`,
+              campaign_id: campaign.id,
+              campaign_name: campaign.brand_name,
+              priority: campaign.status === 'paid' || campaign.status === 'published' ? 'low' : 'medium'
+            });
           }
         }
 

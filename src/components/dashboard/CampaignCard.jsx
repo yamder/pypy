@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../../utils';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, ExternalLink } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -33,10 +33,30 @@ const contentTypeLabels = {
   short: "שורט"
 };
 
+function getNormalizedContentItems(campaign) {
+  if (Array.isArray(campaign.platform_content_items) && campaign.platform_content_items.length > 0) {
+    return campaign.platform_content_items;
+  }
+
+  if (campaign.platform || campaign.content_type) {
+    return [{
+      platform: campaign.platform || 'Other',
+      content_type: campaign.content_type || 'video',
+      quantity: 1
+    }];
+  }
+
+  return [];
+}
+
 export default function CampaignCard({ campaign, compact = false }) {
   const status = statusConfig[campaign.status] || statusConfig.waiting_signature;
-  const platforms = campaign.platforms || (campaign.platform ? [campaign.platform] : []);
-  const primaryPlatform = platforms[0] || 'Other';
+  const contentItems = getNormalizedContentItems(campaign);
+  const platforms = [...new Set(contentItems.map((item) => item.platform).filter(Boolean))];
+  const contentTypes = [...new Set(contentItems.map((item) => item.content_type).filter(Boolean))];
+  const contentTypeText = contentTypes.length > 0
+    ? contentTypes.map((type) => contentTypeLabels[type] || type).join(' + ')
+    : 'לא הוגדר';
   const netIncome = campaign.payment_amount 
     ? (campaign.payment_amount * (1 - (campaign.agent_commission_percentage || 0) / 100))
     : 0;
@@ -65,7 +85,7 @@ export default function CampaignCard({ campaign, compact = false }) {
           </div>
           <div>
             <h4 className="font-medium text-slate-900">{campaign.brand_name}</h4>
-            <p className="text-xs text-slate-500">{contentTypeLabels[campaign.content_type]}</p>
+            <p className="text-xs text-slate-500">{contentTypeText}</p>
           </div>
         </div>
         <div className="text-left">
@@ -106,7 +126,7 @@ export default function CampaignCard({ campaign, compact = false }) {
                 </div>
               ))}
               <span className="text-xs text-slate-400 px-2 py-1 bg-slate-50 rounded-md font-medium">
-                {contentTypeLabels[campaign.content_type]}
+                {contentTypeText}
               </span>
             </div>
           </div>

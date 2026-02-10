@@ -5,12 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { Loader2, Upload, X, FileText, Sparkles, Wallet, Calendar, FileStack, Lightbulb, Plus, Trash2 } from 'lucide-react';
 import { addDays } from 'date-fns';
-import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const platforms = ["Instagram", "TikTok", "YouTube", "Facebook", "Twitter", "Other"];
@@ -29,6 +27,7 @@ const paymentTerms = [
   { value: "net_60", label: "שוטף +60" },
   { value: "net_90", label: "שוטף +90" }
 ];
+const documentsBucket = 'documents';
 
 export default function CampaignForm({ open, onOpenChange, campaign = null, onSave }) {
   const { user } = useAuth();
@@ -104,6 +103,40 @@ export default function CampaignForm({ open, onOpenChange, campaign = null, onSa
     return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
   };
 
+  const getStoragePathFromPublicUrl = (url) => {
+    if (!url) return null;
+    try {
+      const parsed = new URL(url);
+      const marker = `/storage/v1/object/public/${documentsBucket}/`;
+      const markerIndex = parsed.pathname.indexOf(marker);
+      if (markerIndex < 0) return null;
+      return decodeURIComponent(parsed.pathname.slice(markerIndex + marker.length));
+    } catch {
+      return null;
+    }
+  };
+
+  const removeUploadedFile = async (fieldName) => {
+    const fileUrl = formData[fieldName];
+    if (!fileUrl) return;
+
+    try {
+      const filePath = getStoragePathFromPublicUrl(fileUrl);
+
+      // If the URL belongs to our storage bucket, remove the physical file too.
+      if (filePath) {
+        const { error } = await supabase.storage.from(documentsBucket).remove([filePath]);
+        if (error) throw error;
+      }
+
+      handleChange(fieldName, '');
+      toast.success('המסמך הוסר בהצלחה');
+    } catch (error) {
+      console.error('File delete failed:', error);
+      toast.error(`מחיקת המסמך נכשלה: ${error?.message || 'שגיאה לא ידועה'}`);
+    }
+  };
+
   const handleFileUpload = async (file, type) => {
     if (type === 'contract') setUploadingContract(true);
     else setUploadingBrief(true);
@@ -119,12 +152,12 @@ export default function CampaignForm({ open, onOpenChange, campaign = null, onSa
       // For best UX, set the bucket to Public so getPublicUrl() works for viewing/downloading.
       const { error: uploadError } = await supabase
         .storage
-        .from('documents')
+        .from(documentsBucket)
         .upload(filePath, file, { contentType: file.type, upsert: false });
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = supabase.storage.from('documents').getPublicUrl(filePath);
+      const { data: publicUrlData } = supabase.storage.from(documentsBucket).getPublicUrl(filePath);
       const url = publicUrlData?.publicUrl || '';
       if (!url) {
         throw new Error('Failed to generate public URL for uploaded file');
@@ -423,7 +456,7 @@ export default function CampaignForm({ open, onOpenChange, campaign = null, onSa
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleChange('contract_url', '')}
+                      onClick={() => removeUploadedFile('contract_url')}
                     >
                       <X className="w-4 h-4" />
                     </Button>
@@ -458,7 +491,7 @@ export default function CampaignForm({ open, onOpenChange, campaign = null, onSa
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleChange('brief_url', '')}
+                      onClick={() => removeUploadedFile('brief_url')}
                     >
                       <X className="w-4 h-4" />
                     </Button>

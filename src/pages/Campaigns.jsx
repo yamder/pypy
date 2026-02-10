@@ -57,7 +57,8 @@ export default function Campaigns() {
     if (filters.status && c.status !== filters.status) {
       return false;
     }
-    if (filters.month && c.planned_publish_date) {
+    if (filters.month) {
+      if (!c.planned_publish_date) return false;
       const month = new Date(c.planned_publish_date).getMonth() + 1;
       if (month !== parseInt(filters.month)) return false;
     }
