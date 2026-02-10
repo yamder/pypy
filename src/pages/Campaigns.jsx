@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import CampaignCard from '../components/dashboard/CampaignCard';
 import CampaignFilters from '../components/campaigns/CampaignFilters';
 import CampaignForm from '../components/campaigns/CampaignForm';
@@ -22,7 +22,14 @@ export default function Campaigns() {
   
   const { data: campaignsRaw, isLoading } = useQuery({
     queryKey: ['campaigns'],
-    queryFn: () => base44.entities.Campaign.list('-created_date')
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .order('created_date', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    }
   });
   const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
 
@@ -147,6 +154,7 @@ export default function Campaigns() {
       <CampaignForm
         open={showForm}
         onOpenChange={setShowForm}
+        campaign={null}
         onSave={() => queryClient.invalidateQueries({ queryKey: ['campaigns'] })}
       />
     </div>

@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { differenceInDays, isPast, parseISO } from 'date-fns';
@@ -24,7 +23,14 @@ export default function NotificationEngine() {
 
   const { data: campaignsRaw = [] } = useQuery({
     queryKey: ['campaigns'],
-    queryFn: () => base44.entities.Campaign.list()
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .order('created_date', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: existingNotificationsRaw = [] } = useQuery({

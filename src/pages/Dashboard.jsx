@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
@@ -36,7 +36,14 @@ export default function Dashboard() {
 
   const { data: campaignsRaw, isLoading } = useQuery({
     queryKey: ['campaigns'],
-    queryFn: () => base44.entities.Campaign.list('-created_date')
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .order('created_date', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];

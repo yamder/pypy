@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { base44 } from '@/api/base44Client';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { Loader2, Upload, X, FileText, Sparkles, Wallet, Calendar, FileStack, Lightbulb, Plus, Trash2 } from 'lucide-react';
@@ -31,7 +30,7 @@ const paymentTerms = [
   { value: "net_90", label: "שוטף +90" }
 ];
 
-export default function CampaignForm({ open, onOpenChange, campaign, onSave }) {
+export default function CampaignForm({ open, onOpenChange, campaign = null, onSave }) {
   const { user } = useAuth();
   const [formData, setFormData] = useState(campaign || {
     brand_name: '',
@@ -144,22 +143,31 @@ export default function CampaignForm({ open, onOpenChange, campaign, onSave }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    
+
     const dataToSave = {
       ...formData,
       payment_amount: parseFloat(formData.payment_amount) || 0,
       agent_commission_percentage: parseFloat(formData.agent_commission_percentage) || 0
     };
 
-    if (campaign?.id) {
-      await base44.entities.Campaign.update(campaign.id, dataToSave);
-    } else {
-      await base44.entities.Campaign.create(dataToSave);
+    try {
+      if (campaign?.id) {
+        const { error } = await supabase.from('campaigns').update(dataToSave).eq('id', campaign.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('campaigns').insert(dataToSave);
+        if (error) throw error;
+      }
+
+      toast.success(campaign?.id ? 'הקמפיין עודכן בהצלחה' : 'הקמפיין נוצר בהצלחה');
+      onSave();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Campaign save failed:', error);
+      toast.error(`שמירת הקמפיין נכשלה: ${error?.message || 'שגיאה לא ידועה'}`);
+    } finally {
+      setSaving(false);
     }
-    
-    setSaving(false);
-    onSave();
-    onOpenChange(false);
   };
 
   const netIncome = formData.payment_amount 

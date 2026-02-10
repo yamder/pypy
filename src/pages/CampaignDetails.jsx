@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import StatusBadge from '../components/campaigns/StatusBadge';
@@ -86,8 +86,13 @@ export default function CampaignDetails() {
   const { data: campaign, isLoading } = useQuery({
     queryKey: ['campaign', campaignId],
     queryFn: async () => {
-      const campaigns = await base44.entities.Campaign.filter({ id: campaignId });
-      return campaigns[0];
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .eq('id', campaignId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
     },
     enabled: !!campaignId
   });
@@ -100,7 +105,8 @@ export default function CampaignDetails() {
       updates.actual_publish_date = new Date().toISOString().split('T')[0];
     }
     
-    await base44.entities.Campaign.update(campaignId, updates);
+    const { error } = await supabase.from('campaigns').update(updates).eq('id', campaignId);
+    if (error) throw error;
     queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
     queryClient.invalidateQueries({ queryKey: ['campaigns'] });
     setUpdating(false);
@@ -108,23 +114,26 @@ export default function CampaignDetails() {
 
   const handleMarkAsPaid = async () => {
     setUpdating(true);
-    await base44.entities.Campaign.update(campaignId, {
+    const { error } = await supabase.from('campaigns').update({
       is_paid: true,
       paid_date: new Date().toISOString().split('T')[0],
       status: 'paid'
-    });
+    }).eq('id', campaignId);
+    if (error) throw error;
     queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
     queryClient.invalidateQueries({ queryKey: ['campaigns'] });
     setUpdating(false);
   };
 
   const handleDelete = async () => {
-    await base44.entities.Campaign.delete(campaignId);
+    const { error } = await supabase.from('campaigns').delete().eq('id', campaignId);
+    if (error) throw error;
     window.location.href = createPageUrl('Campaigns');
   };
 
   const handleUpdateLink = async (link) => {
-    await base44.entities.Campaign.update(campaignId, { published_link: link });
+    const { error } = await supabase.from('campaigns').update({ published_link: link }).eq('id', campaignId);
+    if (error) throw error;
     queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
   };
 
@@ -141,9 +150,10 @@ export default function CampaignDetails() {
       completed: newCompleted
     };
     
-    await base44.entities.Campaign.update(campaignId, { 
+    const { error } = await supabase.from('campaigns').update({ 
       platform_content_items: updatedItems 
-    });
+    }).eq('id', campaignId);
+    if (error) throw error;
     queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
   };
 
