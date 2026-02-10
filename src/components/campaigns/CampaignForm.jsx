@@ -7,9 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/lib/AuthContext';
 import { Loader2, Upload, X, FileText, Sparkles, Wallet, Calendar, FileStack, Lightbulb, Plus, Trash2 } from 'lucide-react';
 import { addDays } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const platforms = ["Instagram", "TikTok", "YouTube", "Facebook", "Twitter", "Other"];
 const contentTypes = [
@@ -29,6 +32,7 @@ const paymentTerms = [
 ];
 
 export default function CampaignForm({ open, onOpenChange, campaign, onSave }) {
+  const { user } = useAuth();
   const [formData, setFormData] = useState(campaign || {
     brand_name: '',
     platform_content_items: [
@@ -96,15 +100,45 @@ export default function CampaignForm({ open, onOpenChange, campaign, onSave }) {
     }));
   };
 
+  const getFileExt = (filename) => {
+    const parts = (filename || '').split('.');
+    return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
+  };
+
   const handleFileUpload = async (file, type) => {
     if (type === 'contract') setUploadingContract(true);
     else setUploadingBrief(true);
 
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    handleChange(type === 'contract' ? 'contract_url' : 'brief_url', file_url);
+    try {
+      const ext = getFileExt(file.name);
+      const safeExt = ext ? `.${ext}` : '';
+      const userPart = user?.id || 'anon';
+      const campaignPart = campaign?.id || 'new';
+      const filePath = `uploads/${userPart}/${campaignPart}/${type}-${Date.now()}${safeExt}`;
 
-    if (type === 'contract') setUploadingContract(false);
-    else setUploadingBrief(false);
+      // NOTE: This uses Supabase Storage. Create a bucket named "documents" in Supabase.
+      // For best UX, set the bucket to Public so getPublicUrl() works for viewing/downloading.
+      const { error: uploadError } = await supabase
+        .storage
+        .from('documents')
+        .upload(filePath, file, { contentType: file.type, upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage.from('documents').getPublicUrl(filePath);
+      const url = publicUrlData?.publicUrl || '';
+      if (!url) {
+        throw new Error('Failed to generate public URL for uploaded file');
+      }
+      handleChange(type === 'contract' ? 'contract_url' : 'brief_url', url);
+      toast.success('המסמך הועלה בהצלחה');
+    } catch (error) {
+      console.error('File upload failed:', error);
+      toast.error(`העלאת המסמך נכשלה: ${error?.message || 'שגיאה לא ידועה'}`);
+    } finally {
+      if (type === 'contract') setUploadingContract(false);
+      else setUploadingBrief(false);
+    }
   };
 
   const handleSubmit = async (e) => {
