@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/lib/AuthContext';
 import CampaignCard from '../components/dashboard/CampaignCard';
 import CampaignFilters from '../components/campaigns/CampaignFilters';
 import CampaignForm from '../components/campaigns/CampaignForm';
@@ -9,6 +10,7 @@ import { Plus, Loader2, Megaphone, LayoutGrid, List } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Campaigns() {
+  const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
   const [filters, setFilters] = useState({
@@ -21,15 +23,18 @@ export default function Campaigns() {
   const queryClient = useQueryClient();
   
   const { data: campaignsRaw, isLoading } = useQuery({
-    queryKey: ['campaigns'],
+    queryKey: ['campaigns', user?.id],
     queryFn: async () => {
+      if (!user?.id) return [];
       const { data, error } = await supabase
         .from('campaigns')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_date', { ascending: false });
       if (error) throw error;
       return data || [];
-    }
+    },
+    enabled: !!user?.id
   });
   const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
 
@@ -155,7 +160,7 @@ export default function Campaigns() {
         open={showForm}
         onOpenChange={setShowForm}
         campaign={null}
-        onSave={() => queryClient.invalidateQueries({ queryKey: ['campaigns'] })}
+        onSave={() => queryClient.invalidateQueries({ queryKey: ['campaigns', user?.id] })}
       />
     </div>
   );

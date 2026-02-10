@@ -66,6 +66,7 @@ create policy "Users can update own profile" on public.profiles
 -- RLS: notifications (restrict by current user email)
 -- =============================================================================
 drop policy if exists "Allow all on notifications" on public.notifications;
+drop policy if exists "Users can manage own notifications" on public.notifications;
 create policy "Users can manage own notifications" on public.notifications
   for all
   using (user_email = public.current_user_email())
@@ -75,9 +76,25 @@ create policy "Users can manage own notifications" on public.notifications
 -- RLS: notification_settings (restrict by current user email)
 -- =============================================================================
 drop policy if exists "Allow all on notification_settings" on public.notification_settings;
+drop policy if exists "Users can manage own notification_settings" on public.notification_settings;
 create policy "Users can manage own notification_settings" on public.notification_settings
   for all
   using (user_email = public.current_user_email())
   with check (user_email = public.current_user_email());
 
--- campaigns: keep existing "Allow all" policy (no change).
+-- =============================================================================
+-- RLS: campaigns (restrict by auth user id)
+-- =============================================================================
+alter table public.campaigns
+  add column if not exists user_id uuid references auth.users(id) on delete cascade;
+
+create index if not exists campaigns_user_id_idx on public.campaigns(user_id);
+
+alter table public.campaigns enable row level security;
+
+drop policy if exists "Allow all on campaigns" on public.campaigns;
+drop policy if exists "Users can manage own campaigns" on public.campaigns;
+create policy "Users can manage own campaigns" on public.campaigns
+  for all
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());

@@ -144,15 +144,26 @@ export default function CampaignForm({ open, onOpenChange, campaign = null, onSa
     e.preventDefault();
     setSaving(true);
 
+    if (!user?.id) {
+      toast.error('משתמש לא מחובר');
+      setSaving(false);
+      return;
+    }
+
     const dataToSave = {
       ...formData,
+      user_id: user.id,
       payment_amount: parseFloat(formData.payment_amount) || 0,
       agent_commission_percentage: parseFloat(formData.agent_commission_percentage) || 0
     };
 
     try {
       if (campaign?.id) {
-        const { error } = await supabase.from('campaigns').update(dataToSave).eq('id', campaign.id);
+        const { error } = await supabase
+          .from('campaigns')
+          .update(dataToSave)
+          .eq('id', campaign.id)
+          .eq('user_id', user.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from('campaigns').insert(dataToSave);

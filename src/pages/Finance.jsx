@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/lib/AuthContext';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import StatsCard from '../components/dashboard/StatsCard';
@@ -37,19 +38,23 @@ const months = [
 ];
 
 export default function Finance() {
+  const { user } = useAuth();
   const [selectedMonth, setSelectedMonth] = useState("all");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
 
   const { data: campaignsRaw, isLoading } = useQuery({
-    queryKey: ['campaigns'],
+    queryKey: ['campaigns', user?.id],
     queryFn: async () => {
+      if (!user?.id) return [];
       const { data, error } = await supabase
         .from('campaigns')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_date', { ascending: false });
       if (error) throw error;
       return data || [];
-    }
+    },
+    enabled: !!user?.id
   });
   const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
 

@@ -6,6 +6,7 @@
 -- =============================================================================
 create table if not exists public.campaigns (
   id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
   created_date timestamptz default now(),
   brand_name text not null default '',
   status text not null default 'waiting_signature' check (status in (
@@ -29,6 +30,8 @@ create table if not exists public.campaigns (
   contract_url text,
   brief_url text
 );
+
+create index if not exists idx_campaigns_user_id on public.campaigns(user_id);
 
 -- =============================================================================
 -- Notifications

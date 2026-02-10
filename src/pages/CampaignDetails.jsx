@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/lib/AuthContext';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import StatusBadge from '../components/campaigns/StatusBadge';
@@ -74,6 +75,7 @@ const paymentTermsLabels = {
 };
 
 export default function CampaignDetails() {
+  const { user } = useAuth();
   const urlParams = new URLSearchParams(window.location.search);
   const campaignId = urlParams.get('id');
   
@@ -84,17 +86,19 @@ export default function CampaignDetails() {
   const queryClient = useQueryClient();
 
   const { data: campaign, isLoading } = useQuery({
-    queryKey: ['campaign', campaignId],
+    queryKey: ['campaign', campaignId, user?.id],
     queryFn: async () => {
+      if (!campaignId || !user?.id) return null;
       const { data, error } = await supabase
         .from('campaigns')
         .select('*')
         .eq('id', campaignId)
+        .eq('user_id', user.id)
         .maybeSingle();
       if (error) throw error;
       return data;
     },
-    enabled: !!campaignId
+    enabled: !!campaignId && !!user?.id
   });
 
   const handleStatusChange = async (status) => {
@@ -105,10 +109,14 @@ export default function CampaignDetails() {
       updates.actual_publish_date = new Date().toISOString().split('T')[0];
     }
     
-    const { error } = await supabase.from('campaigns').update(updates).eq('id', campaignId);
+    const { error } = await supabase
+      .from('campaigns')
+      .update(updates)
+      .eq('id', campaignId)
+      .eq('user_id', user?.id);
     if (error) throw error;
-    queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
-    queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+    queryClient.invalidateQueries({ queryKey: ['campaign', campaignId, user?.id] });
+    queryClient.invalidateQueries({ queryKey: ['campaigns', user?.id] });
     setUpdating(false);
   };
 
@@ -118,23 +126,33 @@ export default function CampaignDetails() {
       is_paid: true,
       paid_date: new Date().toISOString().split('T')[0],
       status: 'paid'
-    }).eq('id', campaignId);
+    })
+      .eq('id', campaignId)
+      .eq('user_id', user?.id);
     if (error) throw error;
-    queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
-    queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+    queryClient.invalidateQueries({ queryKey: ['campaign', campaignId, user?.id] });
+    queryClient.invalidateQueries({ queryKey: ['campaigns', user?.id] });
     setUpdating(false);
   };
 
   const handleDelete = async () => {
-    const { error } = await supabase.from('campaigns').delete().eq('id', campaignId);
+    const { error } = await supabase
+      .from('campaigns')
+      .delete()
+      .eq('id', campaignId)
+      .eq('user_id', user?.id);
     if (error) throw error;
     window.location.href = createPageUrl('Campaigns');
   };
 
   const handleUpdateLink = async (link) => {
-    const { error } = await supabase.from('campaigns').update({ published_link: link }).eq('id', campaignId);
+    const { error } = await supabase
+      .from('campaigns')
+      .update({ published_link: link })
+      .eq('id', campaignId)
+      .eq('user_id', user?.id);
     if (error) throw error;
-    queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+    queryClient.invalidateQueries({ queryKey: ['campaign', campaignId, user?.id] });
   };
 
   const handleToggleCompleted = async (itemIndex) => {
@@ -152,9 +170,11 @@ export default function CampaignDetails() {
     
     const { error } = await supabase.from('campaigns').update({ 
       platform_content_items: updatedItems 
-    }).eq('id', campaignId);
+    })
+      .eq('id', campaignId)
+      .eq('user_id', user?.id);
     if (error) throw error;
-    queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+    queryClient.invalidateQueries({ queryKey: ['campaign', campaignId, user?.id] });
   };
 
   if (isLoading) {
