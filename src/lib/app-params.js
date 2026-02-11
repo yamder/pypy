@@ -6,6 +6,12 @@ const toSnakeCase = (str) => {
 	return str.replace(/([A-Z])/g, '_$1').toLowerCase();
 }
 
+const isInvalidParamValue = (value) => {
+	if (value === null || value === undefined) return true;
+	const normalized = String(value).trim().toLowerCase();
+	return normalized === '' || normalized === 'null' || normalized === 'undefined';
+}
+
 const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl = false } = {}) => {
 	if (isNode) {
 		return defaultValue;
@@ -19,17 +25,20 @@ const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl =
 			}${window.location.hash}`;
 		window.history.replaceState({}, document.title, newUrl);
 	}
-	if (searchParam) {
+	if (!isInvalidParamValue(searchParam)) {
 		storage.setItem(storageKey, searchParam);
 		return searchParam;
 	}
-	if (defaultValue) {
+	if (!isInvalidParamValue(defaultValue)) {
 		storage.setItem(storageKey, defaultValue);
 		return defaultValue;
 	}
 	const storedValue = storage.getItem(storageKey);
-	if (storedValue) {
+	if (!isInvalidParamValue(storedValue)) {
 		return storedValue;
+	}
+	if (storedValue) {
+		storage.removeItem(storageKey);
 	}
 	return null;
 }

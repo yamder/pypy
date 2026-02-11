@@ -1,9 +1,15 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
 import { pagesConfig } from '@/pages.config';
+
+const hasValidBase44Config = () => {
+    const appId = appParams.appId;
+    if (!appId) return false;
+    const normalized = String(appId).trim().toLowerCase();
+    return normalized !== '' && normalized !== 'null' && normalized !== 'undefined';
+};
 
 export default function NavigationTracker() {
     const location = useLocation();
@@ -26,9 +32,12 @@ export default function NavigationTracker() {
             pageName = matchedKey || null;
         }
 
-        // Only call Base44 appLogs when Base44 is configured (avoids 405 on Vercel/production)
-        if (appParams.appId && isAuthenticated && pageName) {
-            base44.appLogs.logUserInApp(pageName).catch(() => {});
+        // Only load and call Base44 tracking when config is truly valid.
+        // This prevents analytics calls like /api/apps/null/... in Supabase-only deployments.
+        if (hasValidBase44Config() && isAuthenticated && pageName) {
+            import('@/api/base44Client')
+                .then(({ base44 }) => base44.appLogs.logUserInApp(pageName))
+                .catch(() => {});
         }
     }, [location, isAuthenticated, Pages, mainPageKey]);
 
